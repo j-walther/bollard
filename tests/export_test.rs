@@ -65,7 +65,7 @@ async fn export_buildkit_oci_test(docker: Docker) -> Result<(), Error> {
         ..Default::default()
     };
     let mut creds_hsh = std::collections::HashMap::new();
-    creds_hsh.insert("localhost:5000", credentials);
+    creds_hsh.insert("localhost:5000".to_string(), credentials);
 
     let res = bollard::grpc::driver::Export::export(
         driver,
@@ -73,6 +73,7 @@ async fn export_buildkit_oci_test(docker: Docker) -> Result<(), Error> {
         frontend_opts,
         load_input,
         Some(creds_hsh),
+        None,
     )
     .await;
 

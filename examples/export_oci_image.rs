@@ -58,7 +58,7 @@ async fn main() {
             ..Default::default()
         };
         let mut creds_hsh = std::collections::HashMap::new();
-        creds_hsh.insert("localhost:5000", credentials);
+        creds_hsh.insert("localhost:5000".to_string(), credentials);
 
         bollard::grpc::driver::Export::export(
             driver,
@@ -66,6 +66,7 @@ async fn main() {
             frontend_opts,
             load_input,
             Some(creds_hsh),
+            None,
         )
         .await
         .unwrap();

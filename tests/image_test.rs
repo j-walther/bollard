@@ -612,7 +612,7 @@ COPY --from=builder1 /token /",
     c.write_all(&uncompressed).unwrap();
     let compressed = c.finish().unwrap();
 
-    let name = "integration_test_build_buildkit_secret";
+    let name = "integration_test_build_buildkit_secret".to_string();
 
     let temp_dir = std::env::temp_dir();
     let temp_path = temp_dir.join("bollard_integration_test_build_buildkit_secret.token");
@@ -637,7 +637,7 @@ COPY --from=builder1 /token /",
         ..Default::default()
     };
     let mut creds_hsh = std::collections::HashMap::new();
-    creds_hsh.insert("localhost:5000", credentials);
+    creds_hsh.insert("localhost:5000".to_string(), credentials);
 
     let res = bollard::grpc::driver::Build::docker_build(
         driver,
@@ -743,7 +743,7 @@ async fn build_buildkit_named_context_test(docker: Docker) -> Result<(), Error> 
     c.write_all(&uncompressed).unwrap();
     let compressed = c.finish().unwrap();
 
-    let name = "integration_test_build_buildkit_named_context";
+    let name = "integration_test_build_buildkit_named_context".to_string();
 
     let frontend_opts = bollard::grpc::build::ImageBuildFrontendOptions::builder()
         .named_context(
@@ -765,7 +765,7 @@ async fn build_buildkit_named_context_test(docker: Docker) -> Result<(), Error> 
         ..Default::default()
     };
     let mut creds_hsh = std::collections::HashMap::new();
-    creds_hsh.insert("localhost:5000", credentials);
+    creds_hsh.insert("localhost:5000".to_string(), credentials);
 
     let res = bollard::grpc::driver::Build::docker_build(
         driver,
@@ -966,7 +966,7 @@ ENTRYPOINT ls buildkit-bollard.txt
     c.write_all(&uncompressed).unwrap();
     let compressed = c.finish().unwrap();
 
-    let name = "integration_test_build_buildkit_image_inline_driver";
+    let name = "integration_test_build_buildkit_image_inline_driver".to_string();
 
     let credentials = bollard::auth::DockerCredentials {
         username: Some("bollard".to_string()),
@@ -1002,7 +1002,7 @@ ENTRYPOINT ls buildkit-bollard.txt
         ..Default::default()
     };
     let mut creds_hsh = std::collections::HashMap::new();
-    creds_hsh.insert("localhost:5000", credentials);
+    creds_hsh.insert("localhost:5000".to_string(), credentials);
 
     let res = bollard::grpc::driver::Build::docker_build(
         driver,
@@ -1083,7 +1083,7 @@ RUN touch bollard.txt
     c.write_all(&uncompressed).unwrap();
     let compressed = c.finish().unwrap();
 
-    let name = "integration_test_build_buildkit_image_anonymous_auth";
+    let name = "integration_test_build_buildkit_image_anonymous_auth".to_string();
 
     let frontend_opts = bollard::grpc::build::ImageBuildFrontendOptions::builder()
         .pull(true)
@@ -1094,13 +1094,18 @@ RUN touch bollard.txt
     let load_input =
         bollard::grpc::build::ImageBuildLoadInput::Upload(bytes::Bytes::from(compressed));
 
-    let res =
-        bollard::grpc::driver::Build::docker_build(driver, name, frontend_opts, load_input, None)
-            .await;
+    let res = bollard::grpc::driver::Build::docker_build(
+        driver,
+        name.clone(),
+        frontend_opts,
+        load_input,
+        None,
+    )
+    .await;
 
     assert!(res.is_ok());
     let _ = &docker
-        .remove_image(name, None::<RemoveImageOptions>, None)
+        .remove_image(&name, None::<RemoveImageOptions>, None)
         .await?;
 
     Ok(())

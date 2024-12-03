@@ -107,22 +107,23 @@ impl DriverTearDownHandler for BuildkitDaemonTearDownHandler {
 impl super::Build for BuildkitDaemon {
     async fn docker_build(
         self,
-        name: &str,
+        name: String,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
     ) -> Result<(), GrpcError> {
         let mut exporter_attrs = HashMap::new();
         exporter_attrs.insert(String::from("type"), String::from("docker"));
-        exporter_attrs.insert(String::from("name"), String::from(name));
+        exporter_attrs.insert(String::from("name"), name);
         super::solve(
             self,
-            "moby",
+            "moby".to_string(),
             exporter_attrs,
             None,
             frontend_opts,
             load_input,
             credentials,
+            None,
         )
         .await
     }
@@ -134,7 +135,8 @@ impl super::Export for BuildkitDaemon {
         exporter_request: ImageExporterEnum,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
+        reference: Option<String>,
     ) -> Result<(), GrpcError> {
         let (exporter, exporter_attrs, path) = match exporter_request {
             ImageExporterEnum::OCI(request) => ("oci", request.output.into_map(), request.path),
@@ -144,12 +146,13 @@ impl super::Export for BuildkitDaemon {
         };
         super::solve(
             self,
-            exporter,
+            exporter.to_string(),
             exporter_attrs,
             Some(path),
             frontend_opts,
             load_input,
             credentials,
+            reference,
         )
         .await
     }
@@ -161,18 +164,19 @@ impl super::Image for BuildkitDaemon {
         output: ImageRegistryOutput,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
     ) -> Result<(), GrpcError> {
         let exporter = "image";
         let exporter_attrs = output.into_map();
         super::solve(
             self,
-            exporter,
+            exporter.to_string(),
             exporter_attrs,
             None,
             frontend_opts,
             load_input,
             credentials,
+            None,
         )
         .await
     }

@@ -84,7 +84,7 @@ async fn main() {
             ..Default::default()
         };
         let mut creds_hsh = std::collections::HashMap::new();
-        creds_hsh.insert("localhost:5000", credentials);
+        creds_hsh.insert("localhost:5000".to_string(), credentials);
 
         bollard::grpc::driver::Image::registry(
             driver,

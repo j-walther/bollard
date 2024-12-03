@@ -300,7 +300,7 @@ impl FileSendPacket for FileSendPacketImpl {
                     },
                     Ok(PacketType::PacketReq) => panic!("server should not request"),
                     Ok(PacketType::PacketData) => {
-                        if packet.data.len() == 0 {
+                        if packet.data.is_empty() {
                             // all data for file has been received
                             stats.remove(&packet.id);
                         } else {
@@ -427,11 +427,11 @@ impl AuthProvider {
 
     pub(crate) fn set_docker_credentials(
         &mut self,
-        host: &str,
+        host: impl AsRef<str>,
         docker_credentials: DockerCredentials,
     ) {
         self.auth_config_cache
-            .insert(String::from(host), docker_credentials);
+            .insert(host.as_ref().to_string(), docker_credentials);
     }
 
     fn get_auth_config(&self, mut host: &str) -> Option<DockerCredentials> {
@@ -439,11 +439,9 @@ impl AuthProvider {
             host = DOCKER_HUB_CONFIG_FILE_KEY;
         }
 
-        if let Some(creds) = self.auth_config_cache.get(host) {
-            Some(DockerCredentials::to_owned(creds))
-        } else {
-            None
-        }
+        self.auth_config_cache
+            .get(host)
+            .map(|creds| creds.to_owned())
     }
 
     fn to_token_response(
@@ -894,7 +892,8 @@ impl Service<tonic::transport::Uri> for GrpcClient {
 }
 
 // Reference: https://github.com/moby/buildkit/blob/master/identity/randomid.go
-pub(crate) fn new_id() -> String {
+/// Generate a new random id for interacting with Buildkit
+pub fn new_id() -> String {
     let mut p: [u8; 17] = Default::default();
     rand::thread_rng().fill_bytes(&mut p);
     p[0] |= 0x80; // set high bit to avoid the need for padding

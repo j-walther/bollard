@@ -41,6 +41,7 @@ pub struct ImageBuildFrontendOptions {
     pub(crate) secrets: HashMap<String, SecretSource>,
     pub(crate) ssh: bool,
     pub(crate) named_contexts: HashMap<String, NamedContext>,
+    pub(crate) dockerfile_name: Option<String>,
     //pub(crate) ulimit: Vec<String>,
 }
 
@@ -196,6 +197,10 @@ impl ImageBuildFrontendOptions {
             }
         }
 
+        if let Some(filename) = self.dockerfile_name {
+            attrs.insert(String::from("filename"), filename);
+        }
+
         if !self.platforms.is_empty() {
             attrs.insert(
                 String::from("platform"),
@@ -306,6 +311,13 @@ impl ImageBuildFrontendOptionsBuilder {
     /// Do not use the cache when building the image.
     pub fn nocache(mut self, nocache: bool) -> Self {
         self.inner.nocache = nocache;
+        self
+    }
+
+    /// Set the name of the Dockerfile to use for the build.
+    /// Will default to `Dockerfile` if not set.
+    pub fn dockerfile(mut self, filename: String) -> Self {
+        self.inner.dockerfile_name = Some(filename);
         self
     }
 

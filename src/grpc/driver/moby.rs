@@ -132,22 +132,23 @@ impl super::DriverTearDownHandler for MobyTearDownHandler {
 impl super::Build for Moby {
     async fn docker_build(
         self,
-        name: &str,
+        name: String,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
     ) -> Result<(), GrpcError> {
         let mut exporter_attrs = HashMap::new();
         exporter_attrs.insert(String::from("type"), String::from("docker"));
-        exporter_attrs.insert(String::from("name"), String::from(name));
+        exporter_attrs.insert(String::from("name"), name);
         super::solve(
             self,
-            "moby",
+            "moby".to_string(),
             exporter_attrs,
             None,
             frontend_opts,
             load_input,
             credentials,
+            None,
         )
         .await
     }

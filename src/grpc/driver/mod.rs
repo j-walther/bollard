@@ -9,6 +9,7 @@ use bollard_buildkit_proto::moby::{
     sshforward::v1::ssh_server::SshServer,
     upload::v1::upload_server::UploadServer,
 };
+
 use log::debug;
 // use tonic::service::Interceptor;
 use tonic::{
@@ -96,7 +97,8 @@ pub trait Export {
         exporter_request: ImageExporterEnum,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
+        reference: Option<String>,
     ) -> Result<(), GrpcError>;
 }
 
@@ -105,10 +107,10 @@ pub trait Build {
     /// Build a docker container without exporting
     async fn docker_build(
         self,
-        name: &str,
+        name: String,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
     ) -> Result<(), GrpcError>;
 }
 
@@ -120,18 +122,20 @@ pub trait Image {
         output: ImageRegistryOutput,
         frontend_opts: ImageBuildFrontendOptions,
         load_input: ImageBuildLoadInput,
-        credentials: Option<HashMap<&str, DockerCredentials>>,
+        credentials: Option<HashMap<String, DockerCredentials>>,
     ) -> Result<(), GrpcError>;
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn solve(
     driver: impl Driver,
-    exporter: &str,
+    exporter: String,
     exporter_attrs: HashMap<String, String>,
     path: Option<PathBuf>,
     frontend_opts: ImageBuildFrontendOptions,
     load_input: ImageBuildLoadInput,
-    credentials: Option<HashMap<&str, DockerCredentials>>,
+    credentials: Option<HashMap<String, DockerCredentials>>,
+    reference: Option<String>,
 ) -> Result<(), GrpcError> {
     let session_id = crate::grpc::new_id();
 
@@ -184,7 +188,10 @@ pub(crate) async fn solve(
     let tear_down_handler = driver.get_tear_down_handler();
     let mut control_client = driver.grpc_handle(&session_id, services).await?;
 
-    let id = super::new_id();
+    let id = match reference {
+        Some(reference) => reference,
+        None => super::new_id(),
+    };
 
     let solve_request = SolveRequest {
         r#ref: id,
@@ -197,7 +204,7 @@ pub(crate) async fn solve(
         }),
         definition: None,
         entitlements: vec![],
-        exporter_deprecated: String::from(exporter),
+        exporter_deprecated: exporter,
         exporter_attrs_deprecated: exporter_attrs,
         frontend: String::from("dockerfile.v0"),
         frontend_attrs,
