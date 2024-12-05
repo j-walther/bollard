@@ -54,6 +54,8 @@ pub enum SecretSource {
     /// Sets the secret source as an environment variable, must be associated with appropriate
     /// Dockerfile instruction: `RUN mount=type=secret,id=foo,env=MY_ENV_VAR`
     Env(String),
+    /// Sets the secret source as the passed value.
+    Raw(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]

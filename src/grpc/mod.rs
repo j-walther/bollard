@@ -672,6 +672,9 @@ impl Secrets for SecretProvider {
         let id: &str = request.get_ref().id.as_ref();
 
         match self.store.get(id) {
+            Some(build::SecretSource::Raw(value)) => Ok(Response::new(GetSecretResponse {
+                data: value.as_bytes().to_vec(),
+            })),
             Some(build::SecretSource::File(path)) if path.exists() => {
                 match tokio::fs::metadata(&path).await {
                     Ok(metadata) => {
